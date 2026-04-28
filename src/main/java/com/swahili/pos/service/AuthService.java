@@ -1,9 +1,6 @@
 package com.swahili.pos.service;
 
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,13 +14,14 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService implements UserDetailsService {
+public class AuthService {
 
     private final UserRepository userRepo;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     public AuthResponse login(AuthRequest req) {
+
         User user = userRepo.findByUsername(req.getUsername())
                 .filter(User::isActive)
                 .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
@@ -32,7 +30,6 @@ public class AuthService implements UserDetailsService {
             throw new BadCredentialsException("Invalid credentials");
         }
 
-        // ✅ FIXED HERE (removed role argument)
         String token = jwtUtil.generateToken(user.getUsername());
 
         return new AuthResponse(
@@ -41,17 +38,5 @@ public class AuthService implements UserDetailsService {
                 user.getFullName(),
                 user.getRole().name()
         );
-    }
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepo.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-
-        return org.springframework.security.core.userdetails.User
-                .withUsername(user.getUsername())
-                .password(user.getPassword())
-                .roles(user.getRole().name())
-                .build();
     }
 }

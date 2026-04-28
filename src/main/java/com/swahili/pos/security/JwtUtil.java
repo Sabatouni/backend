@@ -25,30 +25,22 @@ public class JwtUtil {
     private final SecretKey key;
     private final long expirationMs;
 
-    /**
-     * Spring reads jwt.secret from application.properties which pulls JWT_SECRET
-     * from the Railway environment variable.  We convert it to bytes here so the
-     * raw plain-text secret works without any base64 pre-encoding on Railway.
-     *
-     * Minimum secret length: 32 characters (256-bit HMAC-SHA256).
-     */
     public JwtUtil(
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.expiration-ms:86400000}") long expirationMs) {
 
         if (secret == null || secret.isBlank()) {
-            throw new IllegalStateException(
-                "JWT_SECRET environment variable is not set. " +
-                "Add it in Railway → Variables with a random 32+ char string.");
+            throw new IllegalStateException("JWT_SECRET is missing in environment variables");
         }
+
         if (secret.length() < 32) {
-            throw new IllegalStateException(
-                "JWT_SECRET must be at least 32 characters for HMAC-SHA256.");
+            throw new IllegalStateException("JWT_SECRET must be at least 32 characters");
         }
 
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
-        log.info("JwtUtil initialised — expiration {}ms", expirationMs);
+
+        log.info("JwtUtil initialized (expiration {} ms)", expirationMs);
     }
 
     public String generateToken(String username) {
@@ -69,15 +61,13 @@ public class JwtUtil {
             parseClaims(token);
             return true;
         } catch (ExpiredJwtException e) {
-            log.warn("JWT expired: {}", e.getMessage());
+            log.warn("JWT expired");
         } catch (UnsupportedJwtException e) {
-            log.warn("JWT unsupported: {}", e.getMessage());
+            log.warn("JWT unsupported");
         } catch (MalformedJwtException e) {
-            log.warn("JWT malformed: {}", e.getMessage());
-        } catch (SecurityException e) {
-            log.warn("JWT signature invalid: {}", e.getMessage());
-        } catch (IllegalArgumentException e) {
-            log.warn("JWT claims empty: {}", e.getMessage());
+            log.warn("JWT malformed");
+        } catch (Exception e) {
+            log.warn("JWT invalid");
         }
         return false;
     }

@@ -32,8 +32,15 @@ public class AuthService implements UserDetailsService {
             throw new BadCredentialsException("Invalid credentials");
         }
 
-        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
-        return new AuthResponse(token, user.getUsername(), user.getFullName(), user.getRole().name());
+        // ✅ FIXED HERE (removed role argument)
+        String token = jwtUtil.generateToken(user.getUsername());
+
+        return new AuthResponse(
+                token,
+                user.getUsername(),
+                user.getFullName(),
+                user.getRole().name()
+        );
     }
 
     @Override

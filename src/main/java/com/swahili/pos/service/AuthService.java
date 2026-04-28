@@ -1,17 +1,19 @@
 package com.swahili.pos.service;
 
-import com.swahili.pos.dto.AuthRequest;
-import com.swahili.pos.dto.AuthResponse;
-import com.swahili.pos.model.User;
-import com.swahili.pos.repository.UserRepository;
-import com.swahili.pos.security.JwtUtil;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import com.swahili.pos.dto.AuthRequest;
+import com.swahili.pos.dto.AuthResponse;
+import com.swahili.pos.model.User;
+import com.swahili.pos.repository.UserRepository;
+import com.swahili.pos.security.JwtUtil;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +32,7 @@ public class AuthService implements UserDetailsService {
             throw new BadCredentialsException("Invalid credentials");
         }
 
-        String token = jwtUtil.generate(user.getUsername(), user.getRole().name());
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
         return new AuthResponse(token, user.getUsername(), user.getFullName(), user.getRole().name());
     }
 

@@ -1,4 +1,4 @@
-package com.swahili.security;
+package com.swahili.pos.security;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;

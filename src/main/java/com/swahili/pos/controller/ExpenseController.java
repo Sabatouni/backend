@@ -1,36 +1,32 @@
-package com.swahili.pos.controller;
+package com.yourapp.controller;
 
-import com.swahili.pos.dto.ExpenseRequest;
-import com.swahili.pos.dto.ExpenseResponse;
-import com.swahili.pos.service.ExpenseService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
 import java.util.List;
+
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/expenses")
-@RequiredArgsConstructor
+@CrossOrigin
 public class ExpenseController {
 
-    private final ExpenseService expenseService;
+    private final ExpenseService service;
 
-    @PostMapping
-    public ResponseEntity<ExpenseResponse> create(
-            @Valid @RequestBody ExpenseRequest req,
-            Authentication auth) {
-        return ResponseEntity.ok(expenseService.create(req, auth.getName()));
+    public ExpenseController(ExpenseService service) {
+        this.service = service;
     }
 
     @GetMapping
-    public ResponseEntity<List<ExpenseResponse>> list(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return ResponseEntity.ok(expenseService.findByRange(from, to));
+    public List<Expense> getExpenses() {
+        return service.getAll();
+    }
+
+    @PostMapping
+    public Expense addExpense(@RequestBody Expense expense) {
+        return service.save(expense);
     }
 }

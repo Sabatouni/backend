@@ -1,36 +1,32 @@
-package com.swahili.pos.controller;
+package com.yourapp.controller;
 
-import com.swahili.pos.dto.SaleRequest;
-import com.swahili.pos.dto.SaleResponse;
-import com.swahili.pos.service.SaleService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
 import java.util.List;
+
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/sales")
-@RequiredArgsConstructor
+@CrossOrigin
 public class SaleController {
 
-    private final SaleService saleService;
+    private final SaleService service;
 
-    @PostMapping
-    public ResponseEntity<SaleResponse> create(
-            @Valid @RequestBody SaleRequest req,
-            Authentication auth) {
-        return ResponseEntity.ok(saleService.create(req, auth.getName()));
+    public SaleController(SaleService service) {
+        this.service = service;
     }
 
     @GetMapping
-    public ResponseEntity<List<SaleResponse>> list(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return ResponseEntity.ok(saleService.findByRange(from, to));
+    public List<Sale> getSales() {
+        return service.getAll();
+    }
+
+    @PostMapping
+    public Sale addSale(@RequestBody Sale sale) {
+        return service.save(sale);
     }
 }

@@ -6,19 +6,31 @@ import express from "express";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(express.json());
 
-// 🔐 Supabase Admin Client (service role)
+// ✅ Health check (IMPORTANT)
+app.get("/", (req, res) => {
+  res.send("Backend is running 🚀");
+});
+
+// 🔐 Supabase Admin Client
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// 🔒 AUTH MIDDLEWARE — requires ADMIN or OWNER role
+// 🔒 AUTH MIDDLEWARE
 async function requireAdmin(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
+
     if (!authHeader?.startsWith("Bearer ")) {
       return res.status(401).json({ error: "Missing token" });
     }
@@ -30,31 +42,33 @@ async function requireAdmin(req, res, next) {
       return res.status(401).json({ error: "Invalid token" });
     }
 
-    const r = (data.user.user_metadata?.role || "").toLowerCase();
-    if (!["admin", "owner"].includes(r)) {
-      return res.status(403).json({ error: "Not authorized — owner/admin only" });
+    const role = (data.user.user_metadata?.role || "").toLowerCase();
+
+    if (!["admin", "owner"].includes(role)) {
+      return res.status(403).json({ error: "Not authorized" });
     }
 
     req.user = data.user;
     next();
+
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message || "Server error" });
   }
 }
 
-// ── GET all users ──────────────────────────────────────────────
+// ── ROUTES ─────────────────────────────
+
 app.get("/admin/users", requireAdmin, async (req, res) => {
   const { data, error } = await supabase.auth.admin.listUsers();
   if (error) return res.status(400).json({ error: error.message });
   res.json(data.users);
 });
 
-// ── CREATE user ────────────────────────────────────────────────
 app.post("/admin/users", requireAdmin, async (req, res) => {
   const { email, password, role = "WORKER", name } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required" });
+    return res.status(400).json({ error: "Email & password required" });
   }
 
   const { data, error } = await supabase.auth.admin.createUser({
@@ -71,7 +85,6 @@ app.post("/admin/users", requireAdmin, async (req, res) => {
   res.json(data.user);
 });
 
-// ── CHANGE role ────────────────────────────────────────────────
 app.patch("/admin/role", requireAdmin, async (req, res) => {
   const { userId, role } = req.body;
 
@@ -83,7 +96,6 @@ app.patch("/admin/role", requireAdmin, async (req, res) => {
   res.json(data);
 });
 
-// ── ENABLE / DISABLE user ──────────────────────────────────────
 app.patch("/admin/active", requireAdmin, async (req, res) => {
   const { userId, active } = req.body;
 
@@ -95,23 +107,27 @@ app.patch("/admin/active", requireAdmin, async (req, res) => {
   res.json(data);
 });
 
-// ── RESET password ─────────────────────────────────────────────
 app.post("/admin/reset-password", requireAdmin, async (req, res) => {
   const { email } = req.body;
 
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
   if (error) return res.status(400).json({ error: error.message });
+
   res.json({ message: "Reset email sent" });
 });
 
-// ── DELETE user ────────────────────────────────────────────────
 app.delete("/admin/users/:id", requireAdmin, async (req, res) => {
   const { id } = req.params;
 
   const { error } = await supabase.auth.admin.deleteUser(id);
   if (error) return res.status(400).json({ error: error.message });
+
   res.json({ message: "User deleted" });
 });
 
+// 🚀 START SERVER
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`🚀 Admin backend running on port ${PORT}`));
+
+app.listen(PORT, () => {
+  console.log(`🚀 Admin backend running on port ${PORT}`);
+});

@@ -1,4 +1,4 @@
-package com.yourapp.model;
+package com.swahili.pos.model;
 
 import java.time.LocalDateTime;
 

@@ -4,6 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.swahili.pos.model.Sale;
+import com.swahili.pos.repository.SaleRepository;
+
 @Service
 public class SaleService {
 

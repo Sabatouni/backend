@@ -4,6 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.swahili.pos.model.Expense;
+import com.swahili.pos.repository.ExpenseRepository;
+
 @Service
 public class ExpenseService {
 

@@ -1,4 +1,4 @@
-package com.yourapp.service;
+package com.swahili.pos.service;
 
 import java.util.List;
 
